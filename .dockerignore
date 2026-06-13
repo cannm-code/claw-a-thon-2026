@@ -1,0 +1,13 @@
+.env
+.greennode.json
+.agentbase-state.json
+.agentbase/
+data/sessions/
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.git/
+.gitignore
+openspec/
+README.md

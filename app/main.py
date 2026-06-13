@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from pathlib import Path
 
-from fastapi import Cookie, FastAPI, Request, Response
+from fastapi import FastAPI, Request, Response
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -133,6 +133,11 @@ async def book(body: BookRequest, request: Request, response: Response):
         "total_price": body.total_price,
         "currency": body.currency,
     }
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok"}
 
 
 @app.get("/api/history")

@@ -80,3 +80,23 @@ Hỗ trợ bất kỳ API tương thích OpenAI. Ví dụ:
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o` |
 | Azure OpenAI | `https://<resource>.openai.azure.com/openai/deployments/<deploy>` | `gpt-4o` |
 | Local (LM Studio) | `http://localhost:1234/v1` | tên model local |
+
+## Deployment complete!
+
+Step 9/9: Verify ✓
+
+  Project:     claw-a-thon-2026
+  Runtime ID:  runtime-fb1945d6-5e78-4d89-9a25-450ed5e07551
+  Version:     1
+  Status:      ACTIVE
+  Endpoint:    https://endpoint-8e85887c-b6bd-4095-9be8-8383a12eacd6.agentbase-runtime.aiplatform.vngcloud.vn
+  Health:      OK (200)
+  Memory:      memory-c17038cd-8aea-4446-b88d-067df6e8545b (SEMANTIC)
+  Image:       vcr.vngcloud.vn/111480-abp111978/claw-a-thon-2026:latest
+
+Console: https://aiplatform.console.vngcloud.vn/agent-runtime?tab=runtime
+Your Claw-a-thon 2026 travel assistant is live. You can visit the endpoint URL directly in a browser to use the chat UI. A few notes:
+
+Re-deploy updates: rebuild + push the image, then run /agentbase-deploy and update the runtime with the new tag
+Logs & metrics: use /agentbase-monitor to watch live logs from the container
+Credential note: Docker's credsStore was changed from desktop to plain config storage — if you restart Docker Desktop later, you may want to run cr.sh credentials docker-login again to re-authenticate

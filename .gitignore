@@ -1,2 +1,5 @@
 .claude
 openspec
+.env
+.agentbase/
+app/__pycache__
