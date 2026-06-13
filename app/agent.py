@@ -1,0 +1,150 @@
+import json
+import re
+from pathlib import Path
+from openai import OpenAI
+from app.config import settings
+from app.booking import search_inventory, get_sku_detail, knowledge_base
+
+_system_prompt = (Path(__file__).parent.parent / "SYSTEM_PROMPT.md").read_text(encoding="utf-8")
+
+_client = OpenAI(base_url=settings.minimax_base_url, api_key=settings.minimax_api_key)
+
+TOOLS = [
+    {
+        "type": "function",
+        "function": {
+            "name": "search_inventory",
+            "description": "Tìm kiếm sản phẩm du lịch (vé máy bay, xe khách, tàu hỏa, khách sạn, vé tham quan) theo các tham số đầu vào.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "vertical": {
+                        "type": "string",
+                        "description": "Loại sản phẩm: flight, bus, train, hotel, hoặc sightseeing",
+                    },
+                    "origin": {
+                        "type": "string",
+                        "description": "Mã sân bay/thành phố khởi hành (HAN, SGN, DAD, ...) hoặc tên thành phố",
+                    },
+                    "destination": {
+                        "type": "string",
+                        "description": "Mã sân bay/thành phố đến hoặc tên thành phố/điểm đến",
+                    },
+                    "date": {
+                        "type": "string",
+                        "description": "Ngày đi/nhận phòng định dạng YYYY-MM-DD",
+                    },
+                    "pax": {
+                        "type": "integer",
+                        "description": "Số lượng hành khách/khách",
+                        "default": 1,
+                    },
+                    "max_price": {
+                        "type": "number",
+                        "description": "Giá tối đa (VND)",
+                    },
+                    "filters": {
+                        "type": "object",
+                        "description": "Bộ lọc bổ sung như cabin, star_rating, seat_class, ...",
+                    },
+                },
+                "required": ["vertical"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "get_sku_detail",
+            "description": "Lấy thông tin chi tiết (quy định hoàn/đổi vé, hành lý, điều khoản) của một sản phẩm theo sku_id.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "sku_id": {
+                        "type": "string",
+                        "description": "Mã SKU của sản phẩm cần xem chi tiết",
+                    }
+                },
+                "required": ["sku_id"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "knowledge_base",
+            "description": "Tra cứu chính sách, FAQ về hành lý, hoàn/đổi vé, check-in, quy định chung.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Câu hỏi hoặc từ khóa cần tra cứu",
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+    },
+]
+
+_TOOL_HANDLERS = {
+    "search_inventory": lambda args: search_inventory(**args),
+    "get_sku_detail": lambda args: get_sku_detail(**args),
+    "knowledge_base": lambda args: knowledge_base(**args),
+}
+
+
+def _execute_tool(name: str, args: dict):
+    handler = _TOOL_HANDLERS.get(name)
+    if handler is None:
+        return {"error": f"Unknown tool: {name}"}
+    try:
+        return handler(args)
+    except Exception as e:
+        return {"error": str(e)}
+
+
+def parse_structured_response(text: str) -> tuple[str, dict | None]:
+    pattern = r"```json\s*([\s\S]*?)```"
+    match = re.search(pattern, text)
+    if not match:
+        return text, None
+    json_str = match.group(1).strip()
+    try:
+        parsed = json.loads(json_str)
+    except json.JSONDecodeError:
+        return text, None
+    clean_text = text[: match.start()].strip()
+    return clean_text, parsed
+
+
+def run_agent(messages: list[dict]) -> tuple[str, dict | None]:
+    full_messages = [{"role": "system", "content": _system_prompt}] + messages
+
+    for _ in range(8):
+        response = _client.chat.completions.create(
+            model=settings.model_name,
+            messages=full_messages,
+            tools=TOOLS,
+            tool_choice="auto",
+        )
+        msg = response.choices[0].message
+
+        if msg.tool_calls:
+            full_messages.append(msg.model_dump(exclude_none=True))
+            for tc in msg.tool_calls:
+                args = json.loads(tc.function.arguments or "{}")
+                result = _execute_tool(tc.function.name, args)
+                full_messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": json.dumps(result, ensure_ascii=False),
+                    }
+                )
+        else:
+            final_text = msg.content or ""
+            return parse_structured_response(final_text)
+
+    return "Xin lỗi, tôi gặp sự cố khi xử lý yêu cầu. Vui lòng thử lại.", None

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="240" viewBox="0 0 400 240">
+  <defs>
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#06B6D4"/>
+      <stop offset="100%" style="stop-color:#0891B2"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="240" fill="url(#g)"/>
+  <ellipse cx="200" cy="200" rx="250" ry="80" fill="#22D3EE" opacity="0.35"/>
+  <rect x="0" y="185" width="400" height="55" fill="#164E63" opacity="0.5"/>
+  <circle cx="80" cy="50" r="20" fill="#FEF08A" opacity="0.9"/>
+  <ellipse cx="160" cy="155" rx="30" ry="18" fill="#34D399" opacity="0.5"/>
+  <ellipse cx="260" cy="148" rx="40" ry="22" fill="#34D399" opacity="0.4"/>
+  <path d="M 180 170 Q 200 140 220 170" fill="#10B981" opacity="0.5"/>
+  <text x="200" y="215" font-family="Arial,sans-serif" font-size="18" font-weight="bold" fill="white" text-anchor="middle">Phú Quốc</text>
+</svg>
