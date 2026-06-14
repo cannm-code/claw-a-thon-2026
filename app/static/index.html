@@ -95,6 +95,23 @@
     .accent-QH { background: #059669; }
     .accent-BL { background: #7C3AED; }
     .accent-default { background: #6366F1; }
+
+    /* History panel */
+    .history-list { overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+    .booking-card {
+      border: 1px solid #E5E7EB;
+      border-radius: 12px;
+      background: white;
+      padding: 14px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .booking-ref {
+      font-family: monospace;
+      font-weight: 700;
+      font-size: 15px;
+      color: #4F46E5;
+      letter-spacing: 0.05em;
+    }
   </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden" x-data="chatApp()" x-cloak>
@@ -107,6 +124,13 @@
       <p class="text-xs text-emerald-500 font-medium">● Hannah đang trực tuyến</p>
     </div>
     <div class="ml-auto flex items-center gap-2">
+      <button @click="openHistory()" title="Đơn hàng của tôi"
+        class="text-xs text-gray-400 hover:text-indigo-600 border border-gray-200 hover:border-indigo-300 rounded-lg px-3 py-1.5 transition-colors flex items-center gap-1.5">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
+        </svg>
+        Đơn hàng
+      </button>
       <button @click="resetChat()" class="text-xs text-gray-400 hover:text-gray-600 border border-gray-200 rounded-lg px-3 py-1.5 transition-colors">
         Cuộc trò chuyện mới
       </button>
@@ -332,6 +356,68 @@
           </span>
         </button>
         <div class="pb-6"></div>
+      </div>
+    </div>
+
+    <!-- ── HISTORY PANEL ────────────────────────────────────────────────────── -->
+    <div
+      class="absolute inset-0 flex flex-col bg-gray-50 panel-slide"
+      :class="panel === 'history' ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0 pointer-events-none'"
+    >
+      <!-- History header -->
+      <div class="flex items-center gap-3 px-5 py-4 bg-white border-b border-gray-100 flex-shrink-0">
+        <button @click="panel='chat'" class="text-gray-500 hover:text-gray-700 p-1 -ml-1">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+          </svg>
+        </button>
+        <h2 class="font-bold text-gray-900">Đơn hàng của tôi</h2>
+      </div>
+
+      <!-- Loading spinner -->
+      <div x-show="historyLoading" class="flex-1 flex items-center justify-center">
+        <svg class="animate-spin w-8 h-8 text-indigo-400" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+        </svg>
+      </div>
+
+      <!-- Error state -->
+      <div x-show="!historyLoading && historyError" class="flex-1 flex items-center justify-center px-6">
+        <p class="text-sm text-red-500 text-center">Không thể tải đơn hàng. Vui lòng thử lại.</p>
+      </div>
+
+      <!-- Empty state -->
+      <div x-show="!historyLoading && !historyError && historyBookings.length === 0" class="flex-1 flex flex-col items-center justify-center gap-3 px-6">
+        <div class="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-3xl">🎫</div>
+        <p class="text-sm text-gray-500 text-center">Bạn chưa có đặt chỗ nào.</p>
+      </div>
+
+      <!-- Booking list -->
+      <div x-show="!historyLoading && !historyError && historyBookings.length > 0" class="history-list flex-1">
+        <template x-for="(booking, idx) in historyBookings" :key="booking.booking_ref">
+          <div class="booking-card">
+            <div class="flex items-start gap-3">
+              <div class="w-9 h-9 rounded-xl bg-indigo-50 flex items-center justify-center text-lg flex-shrink-0"
+                   x-text="getVerticalIcon({summary: booking.summary})"></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center justify-between gap-2 mb-0.5">
+                  <span class="booking-ref" x-text="booking.booking_ref"></span>
+                  <span class="text-xs text-gray-400" x-text="booking.payment_method ? booking.payment_method.toUpperCase() : ''"></span>
+                </div>
+                <p class="text-sm text-gray-800 font-medium leading-snug" x-text="booking.summary"></p>
+                <div class="flex items-center justify-between mt-2">
+                  <span class="text-xs text-gray-500" x-text="booking.passenger?.name || ''"></span>
+                  <span class="text-sm font-bold text-indigo-600"
+                        x-text="formatPrice(booking.total_price) + ' ' + (booking.currency || 'VND')"></span>
+                </div>
+                <p class="text-xs text-gray-400 mt-1"
+                   x-text="booking.booked_at ? new Date(booking.booked_at).toLocaleString('vi-VN') : ''"></p>
+              </div>
+            </div>
+          </div>
+        </template>
+        <div class="pb-4"></div>
       </div>
     </div>
 

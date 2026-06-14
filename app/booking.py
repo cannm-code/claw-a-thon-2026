@@ -59,6 +59,21 @@ _FAQ = [
     },
 ]
 
+_CITY_IMAGE_KEY = {
+    "HAN": "hanoi",
+    "SGN": "hcmc",
+    "HCM": "hcmc",
+    "DAD": "danang",
+    "DAN": "danang",
+    "PQC": "phuquoc",
+    "NHA": "nhatrang",
+    "NTR": "nhatrang",
+    "HOI": "hoian",
+    "HAN_HOI": "hoian",
+    "HLG": "halong",
+    "MEK": "mekong",
+}
+
 _SUGGESTIONS = {
     "HAN": [
         {"label": "Đà Nẵng", "value": "Đà Nẵng", "image_key": "danang", "subtitle": "✈️ ~1h15m"},
@@ -135,8 +150,15 @@ def search_inventory(
                 entry["check_in_date"] = date
             elif key == "sightseeing":
                 entry["visit_date"] = date
-        if key == "sightseeing" and "image_key" not in entry:
-            entry["image_key"] = entry.get("location_key", "")
+        if "image_key" not in entry or not entry["image_key"]:
+            if key == "sightseeing":
+                entry["image_key"] = entry.get("location_key", "")
+            elif key in ("flights", "buses", "trains"):
+                dest_code = entry.get("destination", "").upper()
+                entry["image_key"] = _CITY_IMAGE_KEY.get(dest_code, "")
+            elif key == "hotels":
+                city_code = entry.get("city", "").upper()
+                entry["image_key"] = _CITY_IMAGE_KEY.get(city_code, "")
         results.append(entry)
 
     return results[:5]

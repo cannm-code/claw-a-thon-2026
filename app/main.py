@@ -14,6 +14,44 @@ from app.agent import run_agent
 
 app = FastAPI(title="Claw-a-thon Travel Agent")
 
+_VALID_IMAGE_KEYS = {"danang", "phuquoc", "hanoi", "hcmc", "nhatrang", "halong", "hoian", "mekong"}
+
+_IMAGE_KEY_ALIASES = {
+    "da_nang": "danang", "danang": "danang",
+    "phu_quoc": "phuquoc", "phuquoc": "phuquoc", "phu quoc": "phuquoc",
+    "ha_noi": "hanoi", "hanoi": "hanoi", "hà nội": "hanoi",
+    "ho_chi_minh": "hcmc", "hcm": "hcmc", "hcmc": "hcmc", "saigon": "hcmc", "sgn": "hcmc",
+    "nha_trang": "nhatrang", "nhatrang": "nhatrang",
+    "ha_long": "halong", "halong": "halong", "hạ long": "halong",
+    "hoi_an": "hoian", "hoian": "hoian", "hội an": "hoian",
+    "mekong_delta": "mekong", "mekong": "mekong",
+}
+
+
+def _normalize_image_key(key: str) -> str:
+    if not key:
+        return ""
+    normalized = _IMAGE_KEY_ALIASES.get(key.lower().strip(), "")
+    if not normalized:
+        # strip underscores/spaces and try again
+        slug = key.lower().replace("_", "").replace(" ", "").replace("-", "")
+        normalized = _IMAGE_KEY_ALIASES.get(slug, slug if slug in _VALID_IMAGE_KEYS else "")
+    return normalized
+
+
+def _fix_image_keys(structured: dict | None) -> dict | None:
+    if not structured:
+        return structured
+    t = structured.get("type")
+    if t == "suggestions":
+        for chip in structured.get("chips", []):
+            chip["image_key"] = _normalize_image_key(chip.get("image_key", ""))
+    elif t == "results":
+        for opt in structured.get("options", []):
+            if "image_key" in opt:
+                opt["image_key"] = _normalize_image_key(opt["image_key"])
+    return structured
+
 SESSIONS_DIR = Path(__file__).parent.parent / "data" / "sessions"
 SESSIONS_DIR.mkdir(parents=True, exist_ok=True)
 
@@ -138,6 +176,7 @@ async def chat(body: ChatRequest, request: Request, response: Response):
             content={"text": f"Lỗi hệ thống: {str(e)}", "structured": None},
         )
 
+    structured = _fix_image_keys(structured)
     structured = _fallback_actions(text, structured)
 
     assistant_content = text

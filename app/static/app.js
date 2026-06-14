@@ -4,7 +4,7 @@ function chatApp() {
     messages: [],
     input: '',
     loading: false,
-    panel: 'chat',          // 'chat' | 'checkout' | 'confirmed'
+    panel: 'chat',          // 'chat' | 'checkout' | 'confirmed' | 'history'
     handoff: {},
     passenger: { name: '', email: '', phone: '' },
     errors: {},
@@ -15,6 +15,9 @@ function chatApp() {
     confirmedPrice: '',
     toast: '',
     _toastTimer: null,
+    historyBookings: [],
+    historyLoading: false,
+    historyError: false,
 
     paymentMethods: [
       { id: 'zalopay', label: 'ZaloPay', icon: '💙' },
@@ -150,7 +153,24 @@ function chatApp() {
     },
 
     viewOrder() {
-      this.showToast(`Mã đặt chỗ: ${this.bookingRef} — Tính năng xem đơn hàng sắp ra mắt!`);
+      this.openHistory();
+    },
+
+    async openHistory() {
+      this.panel = 'history';
+      this.historyLoading = true;
+      this.historyError = false;
+      try {
+        const res = await fetch('/api/history', { credentials: 'include' });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        this.historyBookings = data.bookings || [];
+      } catch (err) {
+        this.historyError = true;
+        this.historyBookings = [];
+      } finally {
+        this.historyLoading = false;
+      }
     },
 
     // ── Helpers ──────────────────────────────────────────────────────────────

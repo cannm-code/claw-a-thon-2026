@@ -101,7 +101,7 @@ For destination/option suggestions (Stage 1-2, when user needs help choosing):
     {
       "label": "<destination name>",
       "value": "<text to send when clicked>",
-      "image_key": "<image filename without extension>",
+      "image_key": "<MUST be one of: danang | phuquoc | hanoi | hcmc | nhatrang | halong | hoian | mekong>",
       "subtitle": "<short info e.g. ✈️ ~1h15m>"
     }
   ]
