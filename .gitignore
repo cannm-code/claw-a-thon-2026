@@ -3,3 +3,4 @@ openspec
 .env
 .agentbase/
 app/__pycache__
+data/sessions

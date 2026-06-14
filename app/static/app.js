@@ -82,6 +82,7 @@ function chatApp() {
           role: 'assistant',
           text: data.text || '',
           structured: data.structured || null,
+          actions: (data.structured && data.structured.actions) || [],
         });
 
         if (data.structured?.type === 'handoff') {

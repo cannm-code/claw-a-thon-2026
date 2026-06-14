@@ -107,16 +107,29 @@ def _execute_tool(name: str, args: dict):
 
 def parse_structured_response(text: str) -> tuple[str, dict | None]:
     pattern = r"```json\s*([\s\S]*?)```"
-    match = re.search(pattern, text)
-    if not match:
+    matches = list(re.finditer(pattern, text))
+    if not matches:
         return text, None
-    json_str = match.group(1).strip()
-    try:
-        parsed = json.loads(json_str)
-    except json.JSONDecodeError:
-        return text, None
-    clean_text = text[: match.start()].strip()
-    return clean_text, parsed
+
+    structured = None
+    actions_list = None
+    for m in matches:
+        try:
+            parsed = json.loads(m.group(1).strip())
+        except json.JSONDecodeError:
+            continue
+        if parsed.get("type") == "actions":
+            actions_list = parsed.get("actions", [])
+        else:
+            structured = parsed
+
+    clean_text = re.sub(pattern, "", text).strip()
+
+    if structured is None and actions_list is not None:
+        return clean_text, {"type": "actions", "actions": actions_list}
+    if structured is not None and actions_list is not None:
+        structured["actions"] = actions_list
+    return clean_text, structured
 
 
 def run_agent(messages: list[dict]) -> tuple[str, dict | None]:

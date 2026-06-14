@@ -120,7 +120,8 @@ For results (Stage 4):
       "price": "<number>",
       "currency": "VND",
       "subtitle": "<route/time/key info>",
-      "highlights": ["<short reason 1>", "<short reason 2>"]
+      "highlights": ["<short reason 1>", "<short reason 2>"],
+      "image_key": "<copy image_key from tool result if present, else omit>"
     }
   ]
 }
@@ -136,5 +137,26 @@ For handoff (Stage 5, after confirmation):
   "currency": "VND"
 }
 ```
+
+For quick-reply actions — include as a SEPARATE second ```json block OR add `"actions"` directly inside any other block (results, suggestions, etc.):
+```json
+{
+  "type": "actions",
+  "actions": [
+    { "label": "<short button label>", "value": "<text sent as user message when tapped>" }
+  ]
+}
+```
+
+**HARD RULE — actions are MANDATORY whenever you ask the user anything.**
+Every turn that ends with a question MUST be followed by an `actions` block (2–4 choices). No exceptions.
+
+When to emit and what to include:
+- Asking for confirmation (Stage 5) → ["Xác nhận đặt", "Chọn chuyến khác", "Thay đổi thông tin"]
+- Asking for date → ["Hôm nay", "Ngày mai", "Cuối tuần này", "Nhập ngày cụ thể"]
+- Asking for vertical → ["Chuyến bay", "Xe khách", "Tàu hỏa", "Khách sạn"]
+- After showing results → ["Chọn giá rẻ nhất", "Xem chi tiết vé đầu tiên", "Tìm lại với ngày khác"]
+- Tool fails / no results → ["Thay đổi ngày đi", "Điều chỉnh ngân sách", "Thử điểm đến khác"]
+- Any other question → provide 2–4 contextually appropriate choices
 
 Always emit valid JSON: no trailing commas, no comments inside the JSON, double quotes only.

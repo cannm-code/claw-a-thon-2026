@@ -1,7 +1,5 @@
 import json
-import os
 from pathlib import Path
-from typing import Any
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -129,7 +127,17 @@ def search_inventory(
         if max_price is not None and item.get("price", 0) > max_price:
             continue
 
-        results.append(item)
+        entry = dict(item)
+        if date:
+            if key in ("flights", "buses", "trains"):
+                entry["depart_date"] = date
+            elif key == "hotels":
+                entry["check_in_date"] = date
+            elif key == "sightseeing":
+                entry["visit_date"] = date
+        if key == "sightseeing" and "image_key" not in entry:
+            entry["image_key"] = entry.get("location_key", "")
+        results.append(entry)
 
     return results[:5]
 
