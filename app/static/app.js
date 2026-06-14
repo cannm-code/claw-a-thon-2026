@@ -17,9 +17,9 @@ function chatApp() {
     _toastTimer: null,
 
     paymentMethods: [
-      { id: 'zalopay', label: 'ZaloPay',       icon: '💙' },
-      { id: 'vnpay',   label: 'VNPay',         icon: '🔴' },
-      { id: 'card',    label: 'Thẻ quốc tế',   icon: '💳' },
+      { id: 'zalopay', label: 'ZaloPay', icon: '💙' },
+      { id: 'vnpay', label: 'VNPay', icon: '🔴' },
+      { id: 'card', label: 'Thẻ quốc tế', icon: '💳' },
     ],
 
     // ── Init ─────────────────────────────────────────────────────────────────
@@ -36,7 +36,7 @@ function chatApp() {
     pushWelcome() {
       this.messages.push({
         role: 'assistant',
-        text: 'Xin chào! Tôi là Chloe, trợ lý du lịch của Claw-a-thon Travel ✈️\n\nTôi có thể giúp bạn đặt **chuyến bay**, **xe khách**, **tàu hỏa**, **khách sạn**, hoặc **vé tham quan**.\n\nBạn muốn đi đâu hôm nay?',
+        text: 'Xin chào! Tôi là Hannah, trợ lý du lịch của Claw-a-thon Travel ✈️\n\nTôi có thể giúp bạn đặt **chuyến bay**, **xe khách**, **tàu hỏa**, **khách sạn**, hoặc **vé tham quan**.\n\nBạn muốn đi đâu hôm nay?',
         structured: null,
       });
     },
