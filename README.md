@@ -39,7 +39,7 @@ uvicorn app.main:app --reload
 
 ```
 claw-a-thon-2026/
-├── SYSTEM_PROMPT.md        # System prompt của agent Chloe
+├── SYSTEM_PROMPT.md        # System prompt của agent Hannah
 ├── requirements.txt
 ├── .env.example
 ├── app/
@@ -62,7 +62,7 @@ claw-a-thon-2026/
 
 ## Tính năng
 
-- **Chat tiếng Việt** với agent Chloe
+- **Chat tiếng Việt** với agent Hannah
 - **5 verticals**: chuyến bay, xe khách, tàu hỏa, khách sạn, vé tham quan
 - **Suggestion chips** với hình ảnh điểm đến — click để chọn nhanh
 - **Result cards** hiển thị thông tin chuyến bay/khách sạn/vé
