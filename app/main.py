@@ -79,7 +79,7 @@ class BookRequest(BaseModel):
     total_price: float
     currency: str = "VND"
     passenger: dict
-    payment_method: str = "MoMo"
+    payment_method: str = "ZaloPay"
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────

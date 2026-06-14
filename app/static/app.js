@@ -8,7 +8,7 @@ function chatApp() {
     handoff: {},
     passenger: { name: '', email: '', phone: '' },
     errors: {},
-    selectedPayment: 'momo',
+    selectedPayment: 'zalopay',
     bookingLoading: false,
     bookingRef: '',
     confirmedSummary: '',
@@ -17,7 +17,6 @@ function chatApp() {
     _toastTimer: null,
 
     paymentMethods: [
-      { id: 'momo',    label: 'MoMo',         icon: '💜' },
       { id: 'zalopay', label: 'ZaloPay',       icon: '💙' },
       { id: 'vnpay',   label: 'VNPay',         icon: '🔴' },
       { id: 'card',    label: 'Thẻ quốc tế',   icon: '💳' },
@@ -89,7 +88,7 @@ function chatApp() {
           this.handoff = data.structured;
           this.passenger = { name: '', email: '', phone: '' };
           this.errors = {};
-          this.selectedPayment = 'momo';
+          this.selectedPayment = 'zalopay';
           await this.$nextTick();
           setTimeout(() => { this.panel = 'checkout'; }, 600);
         }
