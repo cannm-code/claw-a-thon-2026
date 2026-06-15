@@ -240,6 +240,106 @@
                     </template>
                   </div>
                 </template>
+
+                <!-- Inspiration cards (Flow B) -->
+                <template x-if="msg.structured && msg.structured.type === 'inspiration'">
+                  <div>
+                    <p class="text-xs text-gray-500 mb-2 px-1" x-text="msg.structured.message"></p>
+                    <div class="grid grid-cols-2 gap-2">
+                      <template x-for="dest in msg.structured.destinations" :key="dest.destination">
+                        <div class="chip-card" @click="sendChip('Tôi muốn đi ' + dest.destination)">
+                          <div class="p-3">
+                            <div class="flex items-start justify-between gap-1 mb-1">
+                              <p class="font-bold text-gray-900 text-sm leading-tight" x-text="dest.destination"></p>
+                              <span class="text-xs flex-shrink-0 px-1.5 py-0.5 rounded-full font-semibold"
+                                    :class="dest.visa_status === 'visa_free' ? 'bg-emerald-100 text-emerald-700' : dest.visa_status === 'visa_conditional' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'"
+                                    x-text="dest.visa_status === 'visa_free' ? 'Miễn visa' : dest.visa_status === 'visa_conditional' ? 'VOA' : 'Cần visa'">
+                              </span>
+                            </div>
+                            <p class="text-xs text-indigo-600 font-bold mb-1" x-text="'từ ' + formatPrice(dest.est_price) + '₫'"></p>
+                            <p class="text-xs text-gray-500 leading-snug" x-text="dest.why"></p>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Price calendar (Flow C) -->
+                <template x-if="msg.structured && msg.structured.type === 'price_calendar'">
+                  <div class="bg-white rounded-xl border border-gray-100 p-3">
+                    <p class="text-xs text-gray-500 mb-2" x-text="msg.structured.message"></p>
+                    <div class="flex flex-wrap gap-2 mb-3">
+                      <template x-for="d in (msg.structured.cheapest_dates || []).slice(0,6)" :key="d.date">
+                        <button
+                          @click="sendChip('Tôi chọn ngày ' + d.date)"
+                          class="flex flex-col items-center px-3 py-2 bg-indigo-50 hover:bg-indigo-100 rounded-xl border border-indigo-200 transition-colors">
+                          <span class="text-xs text-gray-500 font-medium" x-text="new Date(d.date + 'T00:00:00').toLocaleDateString('vi-VN', {day:'2-digit',month:'2-digit'})"></span>
+                          <span class="text-sm font-bold text-indigo-600" x-text="formatPrice(d.price) + '₫'"></span>
+                        </button>
+                      </template>
+                    </div>
+                    <template x-for="tip in (msg.structured.tips || [])" :key="tip">
+                      <p class="text-xs text-amber-700 bg-amber-50 rounded-lg px-2.5 py-1.5 mb-1" x-text="'💡 ' + tip"></p>
+                    </template>
+                  </div>
+                </template>
+
+                <!-- Fallback cards (Flow 4B) -->
+                <template x-if="msg.structured && msg.structured.type === 'fallback'">
+                  <div>
+                    <p class="text-xs text-gray-500 mb-2 px-1" x-text="msg.structured.message"></p>
+                    <div class="space-y-2">
+                      <template x-for="alt in msg.structured.alternatives" :key="alt.label">
+                        <div class="result-card p-3 flex items-center gap-3"
+                             @click="sendChip(alt.label)"
+                             style="cursor:pointer">
+                          <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+                               :class="alt.kind === 'shift_dates' ? 'bg-blue-50 text-blue-600' : alt.kind === 'swap_transport' ? 'bg-purple-50 text-purple-600' : alt.kind === 'downgrade_stay' ? 'bg-teal-50 text-teal-600' : 'bg-orange-50 text-orange-600'">
+                            <span x-text="alt.kind === 'shift_dates' ? '📅' : alt.kind === 'swap_transport' ? '🚂' : alt.kind === 'downgrade_stay' ? '🏡' : '📍'"></span>
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 leading-tight" x-text="alt.label"></p>
+                            <p class="text-xs text-gray-400 mt-0.5" x-text="alt.tradeoff"></p>
+                          </div>
+                          <div class="text-right flex-shrink-0">
+                            <p class="text-sm font-bold text-indigo-600" x-text="formatPrice(alt.price) + '₫'"></p>
+                            <template x-if="alt.saving_pct">
+                              <span class="text-xs bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-semibold"
+                                    x-text="'-' + alt.saving_pct + '%'"></span>
+                            </template>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
+
+                <!-- Experiences cards (Flow 4C) -->
+                <template x-if="msg.structured && msg.structured.type === 'experiences'">
+                  <div>
+                    <p class="text-xs text-gray-500 mb-2 px-1" x-text="msg.structured.message"></p>
+                    <div class="space-y-2">
+                      <template x-for="exp in msg.structured.options" :key="exp.title">
+                        <div class="result-card p-3 flex items-center gap-3"
+                             @click="sendChip(exp.title)"
+                             style="cursor:pointer">
+                          <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+                               :class="exp.kind === 'staycation' ? 'bg-pink-50' : exp.kind === 'movie' ? 'bg-red-50' : 'bg-violet-50'">
+                            <span x-text="exp.kind === 'staycation' ? '🏨' : exp.kind === 'movie' ? '🎬' : '🎮'"></span>
+                          </div>
+                          <div class="flex-1 min-w-0">
+                            <p class="text-sm font-semibold text-gray-900 leading-tight" x-text="exp.title"></p>
+                            <p class="text-xs text-gray-400 mt-0.5" x-text="exp.note"></p>
+                          </div>
+                          <div class="text-right flex-shrink-0">
+                            <p class="text-sm font-bold text-gray-700" x-text="formatPrice(exp.price) + '₫'"></p>
+                          </div>
+                        </div>
+                      </template>
+                    </div>
+                  </div>
+                </template>
               </div>
             </div>
 
@@ -543,6 +643,6 @@
     x-text="toast"
   ></div>
 
-  <script src="/app.js?v=3"></script>
+  <script src="/app.js?v=4"></script>
 </body>
 </html>

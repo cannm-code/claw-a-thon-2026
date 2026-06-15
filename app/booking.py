@@ -463,6 +463,213 @@ def knowledge_base(query: str) -> list[str]:
     return matched[:2]
 
 
+# ── Destination lookup helper ─────────────────────────────────────────────────
+
+_DESTINATIONS = [
+    {"destination":"Bangkok","country":"TH","iata":"BKK","est_price":2500000,"visa_status":"visa_free","visa_note":"Miễn visa cho hộ chiếu VN, ở tối đa 30 ngày","best_months":["11","12","1","2","3"],"vibe_tags":["city","shopping","food"],"flight_time":"2h"},
+    {"destination":"Phuket","country":"TH","iata":"HKT","est_price":3200000,"visa_status":"visa_free","visa_note":"Miễn visa cho hộ chiếu VN, ở tối đa 30 ngày","best_months":["11","12","1","2"],"vibe_tags":["beach","nature"],"flight_time":"1h30"},
+    {"destination":"Singapore","country":"SG","iata":"SIN","est_price":4500000,"visa_status":"visa_free","visa_note":"Miễn visa cho hộ chiếu VN, ở tối đa 30 ngày","best_months":["2","3","4","5"],"vibe_tags":["city","shopping","food"],"flight_time":"2h15"},
+    {"destination":"Kuala Lumpur","country":"MY","iata":"KUL","est_price":2200000,"visa_status":"visa_free","visa_note":"Miễn visa cho hộ chiếu VN, ở tối đa 30 ngày","best_months":["3","4","5","6"],"vibe_tags":["city","food","shopping"],"flight_time":"2h"},
+    {"destination":"Bali","country":"ID","iata":"DPS","est_price":4800000,"visa_status":"visa_free","visa_note":"Miễn visa cho hộ chiếu VN, ở tối đa 30 ngày","best_months":["5","6","7","8","9"],"vibe_tags":["beach","nature","culture"],"flight_time":"4h"},
+    {"destination":"Cebu","country":"PH","iata":"CEB","est_price":4500000,"visa_status":"visa_free","visa_note":"Miễn visa cho hộ chiếu VN, ở tối đa 30 ngày","best_months":["3","4","5"],"vibe_tags":["beach","diving"],"flight_time":"3h30"},
+    {"destination":"Siem Reap","country":"KH","iata":"REP","est_price":2800000,"visa_status":"visa_conditional","visa_note":"Cần visa on arrival, làm tại cửa khẩu (~$30 USD)","best_months":["11","12","1","2","3"],"vibe_tags":["culture","nature","history"],"flight_time":"1h30"},
+    {"destination":"Tokyo","country":"JP","iata":"NRT","est_price":9500000,"visa_status":"visa_required","visa_note":"Cần xin visa Nhật tại Đại sứ quán, mất 5–7 ngày làm việc","best_months":["3","4","10","11"],"vibe_tags":["city","culture","food","nature"],"flight_time":"6h"},
+    {"destination":"Seoul","country":"KR","iata":"ICN","est_price":6500000,"visa_status":"visa_free","visa_note":"Miễn visa cho hộ chiếu VN đến 15 ngày (K-ETA cần đăng ký trước)","best_months":["4","5","9","10"],"vibe_tags":["city","food","shopping","culture"],"flight_time":"5h"},
+    {"destination":"Đà Nẵng","country":"VN","iata":"DAD","est_price":1200000,"visa_status":"visa_free","visa_note":"Trong nước","best_months":["3","4","5","6","7","8"],"vibe_tags":["beach","city"],"flight_time":"1h20"},
+    {"destination":"Nha Trang","country":"VN","iata":"CXR","est_price":950000,"visa_status":"visa_free","visa_note":"Trong nước","best_months":["6","7","8"],"vibe_tags":["beach","diving"],"flight_time":"1h"},
+    {"destination":"Phú Quốc","country":"VN","iata":"PQC","est_price":1400000,"visa_status":"visa_free","visa_note":"Trong nước","best_months":["11","12","1","2","3","4"],"vibe_tags":["beach","resort","nature"],"flight_time":"1h10"},
+    {"destination":"Quy Nhơn","country":"VN","iata":"UIH","est_price":900000,"visa_status":"visa_free","visa_note":"Trong nước","best_months":["4","5","6","7"],"vibe_tags":["beach","hidden gem"],"flight_time":"1h10"},
+    {"destination":"Đà Lạt","country":"VN","iata":"DLI","est_price":850000,"visa_status":"visa_free","visa_note":"Trong nước","best_months":["11","12","1","2","3"],"vibe_tags":["nature","city","honeymoon"],"flight_time":"1h"},
+    {"destination":"Hà Nội","country":"VN","iata":"HAN","est_price":1100000,"visa_status":"visa_free","visa_note":"Trong nước","best_months":["10","11","12","3","4"],"vibe_tags":["city","culture","food"],"flight_time":"2h"},
+    {"destination":"Jeju","country":"KR","iata":"CJU","est_price":5500000,"visa_status":"visa_free","visa_note":"Miễn visa khi bay thẳng vào đảo Jeju","best_months":["9","10","11","3","4","5"],"vibe_tags":["nature","beach","honeymoon"],"flight_time":"5h"},
+]
+
+_VIBE_MAP = {
+    "beach": ["beach","diving","resort"],
+    "city": ["city","shopping"],
+    "nature": ["nature"],
+    "food": ["food"],
+    "culture": ["culture","history"],
+    "honeymoon": ["honeymoon","beach","nature"],
+}
+
+
+def discover_destinations(
+    origin: str = "SGN",
+    budget_max: float | None = None,
+    region: str | None = None,
+    vibe: str | None = None,
+    month: str | None = None,
+    visa_free_only: bool = True,
+) -> dict:
+    results = []
+    for d in _DESTINATIONS:
+        if visa_free_only and d["visa_status"] == "visa_required":
+            continue
+        if budget_max and d["est_price"] > budget_max:
+            continue
+        if region == "domestic" and d["country"] != "VN":
+            continue
+        if region not in (None, "any", "domestic") and d["country"] == "VN":
+            continue
+        if vibe:
+            accepted = _VIBE_MAP.get(vibe, [vibe])
+            if not any(tag in d["vibe_tags"] for tag in accepted):
+                continue
+        results.append(d)
+    results.sort(key=lambda x: x["est_price"])
+    return {"destinations": results[:6]}
+
+
+def price_calendar(
+    origin: str = "SGN",
+    destination: str = "",
+    month: str | None = None,
+) -> dict:
+    import calendar as _cal
+    dest = destination.upper()
+    # Base price from mock flights or estimate
+    base = 1_400_000
+    for d in _DESTINATIONS:
+        if d["iata"] == dest or d["destination"].upper() == dest:
+            base = int(d["est_price"] * 0.9)
+            break
+
+    # Generate cheapest dates deterministically
+    from datetime import date as _date, timedelta as _td
+    today = _date.today()
+    if month:
+        try:
+            y, m = map(int, month.split("-"))
+            start = _date(y, m, 1)
+        except Exception:
+            start = today.replace(day=1)
+    else:
+        # find cheapest month: pick 2 months ahead
+        start = (today.replace(day=1))
+
+    cheapest_dates = []
+    for offset in range(28):
+        d = start + _td(days=offset)
+        # Cheaper mid-week (Tue=1, Wed=2)
+        dow = d.weekday()
+        if dow in (1, 2):
+            price = int(base * 0.85)
+        elif dow in (4, 5, 6):
+            price = int(base * 1.15)
+        else:
+            price = base
+        cheapest_dates.append({"date": d.isoformat(), "price": price})
+
+    cheapest_dates.sort(key=lambda x: x["price"])
+    cheapest_month = start.strftime("%Y-%m")
+
+    return {
+        "cheapest_month": cheapest_month,
+        "cheapest_dates": cheapest_dates[:5],
+        "weekday_tip": "Bay T3/T4 rẻ hơn cuối tuần ~15–20%",
+        "trend": "Giá tăng dần khi vào mùa cao điểm và dịp lễ",
+    }
+
+
+_ISLAND_ONLY = {"PQC", "PHU QUOC", "DPS", "BALI", "CEB", "CEBU", "HKT", "PHUKET"}
+
+
+def compare_transport(
+    origin: str = "SGN",
+    destination: str = "",
+    date: str = "",
+) -> dict:
+    dest_upper = destination.upper()
+    # Islands / international → air only
+    is_island_or_intl = dest_upper in _ISLAND_ONLY or dest_upper in {
+        d["iata"] for d in _DESTINATIONS if d["country"] != "VN"
+    }
+
+    s = _seed(origin, destination, date, 0)
+    air_price = 1_200_000 + (s % 8) * 100_000
+    options = [
+        {"mode": "air", "sku_id": f"MOCK-VJ-{origin}-{destination}-001",
+         "price": air_price, "currency": "VND", "duration": "1h–2h", "note": "bay thẳng"}
+    ]
+    available_modes = ["air"]
+
+    if not is_island_or_intl:
+        train_price = 350_000 + (s % 5) * 30_000
+        bus_price = 200_000 + (s % 4) * 25_000
+        options += [
+            {"mode": "train", "sku_id": f"MOCK-TRN-{origin}-{destination}-001",
+             "price": train_price, "currency": "VND", "duration": "7–10h (tàu đêm)",
+             "note": "Đi đêm, tiết kiệm 1 đêm khách sạn"},
+            {"mode": "bus", "sku_id": f"MOCK-BUS-{origin}-{destination}-001",
+             "price": bus_price, "currency": "VND", "duration": "6–8h",
+             "note": "Giường nằm cao cấp"},
+        ]
+        available_modes = ["air", "train", "bus"]
+
+    return {"available_modes": available_modes, "options": options}
+
+
+def search_accommodation(
+    area: str = "",
+    check_in: str = "",
+    check_out: str = "",
+    guests: int = 2,
+    budget_max: float | None = None,
+    acc_type: str | None = None,
+) -> dict:
+    area_name = area or "điểm đến"
+    templates = [
+        {"name": f"Grand {area_name} Hotel", "type": "hotel", "base": 2_500_000,
+         "note": "Trung tâm, view đẹp, đầy đủ tiện nghi"},
+        {"name": f"Boutique {area_name} Hotel", "type": "hotel", "base": 1_400_000,
+         "note": "Gần chợ đêm, phong cách địa phương"},
+        {"name": f"Homestay {area_name} Xanh", "type": "homestay", "base": 750_000,
+         "note": "Ấm cúng, chủ nhà thân thiện, có bếp"},
+        {"name": f"Homestay View Đồi {area_name}", "type": "homestay", "base": 650_000,
+         "note": "View đẹp, cách trung tâm ~2km"},
+        {"name": f"Hostel {area_name} Social", "type": "hostel", "base": 450_000,
+         "note": "Phòng riêng, bếp chung, nhiều khách Tây"},
+    ]
+    results = []
+    for i, tpl in enumerate(templates):
+        if acc_type and tpl["type"] != acc_type:
+            continue
+        s = _seed(area, check_in, "", i)
+        price = tpl["base"] + (s % 6) * 50_000
+        if budget_max and price > budget_max:
+            continue
+        results.append({
+            "sku_id": f"MOCK-ACC-{area.upper()}-{i+1:02d}",
+            "name": tpl["name"],
+            "type": tpl["type"],
+            "price_per_night": price,
+            "currency": "VND",
+            "area": area_name,
+            "check_in": check_in,
+            "check_out": check_out,
+            "note": tpl["note"],
+        })
+    if not results:
+        # Return all if nothing matches budget — so agent can apply fallback logic
+        for i, tpl in enumerate(templates):
+            if acc_type and tpl["type"] != acc_type:
+                continue
+            s = _seed(area, check_in, "", i)
+            results.append({
+                "sku_id": f"MOCK-ACC-{area.upper()}-{i+1:02d}",
+                "name": tpl["name"],
+                "type": tpl["type"],
+                "price_per_night": tpl["base"] + (s % 6) * 50_000,
+                "currency": "VND",
+                "area": area_name,
+                "check_in": check_in,
+                "check_out": check_out,
+                "note": tpl["note"],
+            })
+    return {"options": results[:5], "min_price": min(r["price_per_night"] for r in results) if results else 0}
+
+
 def get_suggestions(origin: str = "") -> list[dict]:
     key = (origin or "").upper()
     return _SUGGESTIONS.get(key, _SUGGESTIONS["default"])

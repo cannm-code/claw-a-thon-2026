@@ -3,7 +3,7 @@ import re
 from pathlib import Path
 from openai import OpenAI
 from app.config import settings
-from app.booking import search_inventory, get_sku_detail, knowledge_base
+from app.booking import search_inventory, get_sku_detail, knowledge_base, discover_destinations, price_calendar, compare_transport, search_accommodation
 from app.airports import search_airports, resolve_iata
 
 _system_prompt = (Path(__file__).parent.parent / "SYSTEM_PROMPT.md").read_text(encoding="utf-8")
@@ -104,6 +104,76 @@ TOOLS = [
             },
         },
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "discover_destinations",
+            "description": "Gợi ý điểm đến phù hợp khi user chưa biết muốn đi đâu. Lọc theo ngân sách, vibe (beach/city/nature/food/culture), tình trạng visa, và khu vực (domestic/any).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "origin": {"type": "string", "description": "Mã sân bay khởi hành, mặc định SGN"},
+                    "budget_max": {"type": "number", "description": "Ngân sách tối đa (VND) cho chặng bay 1 chiều"},
+                    "region": {"type": "string", "description": "Khu vực: 'domestic' (nội địa VN), 'any' (tất cả)"},
+                    "vibe": {"type": "string", "description": "Kiểu du lịch: beach, city, nature, food, culture, honeymoon"},
+                    "month": {"type": "string", "description": "Tháng dự định đi, định dạng YYYY-MM"},
+                    "visa_free_only": {"type": "boolean", "description": "Chỉ lấy điểm đến miễn visa, mặc định true"},
+                },
+                "required": [],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "price_calendar",
+            "description": "Tra lịch giá vé cho một chặng bay để tìm ngày rẻ nhất trong tháng.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "origin": {"type": "string", "description": "Mã sân bay khởi hành"},
+                    "destination": {"type": "string", "description": "Mã sân bay hoặc tên thành phố đến"},
+                    "month": {"type": "string", "description": "Tháng cần xem, định dạng YYYY-MM. Null = xem tổng thể"},
+                },
+                "required": ["origin", "destination"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "compare_transport",
+            "description": "So sánh các phương tiện di chuyển (máy bay, tàu hỏa, xe khách) cho cùng một chặng và ngày. Chỉ trả phương tiện thực sự hỗ trợ chặng đó.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "origin": {"type": "string", "description": "Điểm khởi hành"},
+                    "destination": {"type": "string", "description": "Điểm đến"},
+                    "date": {"type": "string", "description": "Ngày đi YYYY-MM-DD"},
+                },
+                "required": ["origin", "destination", "date"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "search_accommodation",
+            "description": "Tìm kiếm khách sạn, homestay, hostel theo khu vực, ngày nhận/trả phòng, số khách, ngân sách.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "area": {"type": "string", "description": "Tên thành phố / khu vực"},
+                    "check_in": {"type": "string", "description": "Ngày nhận phòng YYYY-MM-DD"},
+                    "check_out": {"type": "string", "description": "Ngày trả phòng YYYY-MM-DD"},
+                    "guests": {"type": "integer", "description": "Số khách", "default": 2},
+                    "budget_max": {"type": "number", "description": "Giá tối đa mỗi đêm (VND)"},
+                    "acc_type": {"type": "string", "description": "Loại chỗ ở: hotel, homestay, hostel. Null = tất cả"},
+                },
+                "required": ["area", "check_in", "check_out"],
+            },
+        },
+    },
 ]
 
 def _airport_lookup_handler(args: dict):
@@ -122,6 +192,10 @@ _TOOL_HANDLERS = {
     "get_sku_detail": lambda args: get_sku_detail(**args),
     "knowledge_base": lambda args: knowledge_base(**args),
     "airport_lookup": _airport_lookup_handler,
+    "discover_destinations": lambda args: discover_destinations(**args),
+    "price_calendar": lambda args: price_calendar(**args),
+    "compare_transport": lambda args: compare_transport(**args),
+    "search_accommodation": lambda args: search_accommodation(**{k if k != "type" else "acc_type": v for k, v in args.items()}),
 }
 
 
