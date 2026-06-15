@@ -18,6 +18,7 @@ function chatApp() {
     historyBookings: [],
     historyLoading: false,
     historyError: false,
+    expandedBooking: null,
 
     paymentMethods: [
       { id: 'zalopay', label: 'ZaloPay', icon: '💙' },
@@ -153,24 +154,32 @@ function chatApp() {
     },
 
     viewOrder() {
-      this.openHistory();
+      this.openHistory(this.bookingRef);
     },
 
-    async openHistory() {
+    async openHistory(autoExpandRef = null) {
       this.panel = 'history';
       this.historyLoading = true;
       this.historyError = false;
+      this.expandedBooking = null;
       try {
         const res = await fetch('/api/history', { credentials: 'include' });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         this.historyBookings = data.bookings || [];
+        if (autoExpandRef) {
+          this.expandedBooking = autoExpandRef;
+        }
       } catch (err) {
         this.historyError = true;
         this.historyBookings = [];
       } finally {
         this.historyLoading = false;
       }
+    },
+
+    toggleBooking(ref) {
+      this.expandedBooking = this.expandedBooking === ref ? null : ref;
     },
 
     // ── Helpers ──────────────────────────────────────────────────────────────
@@ -206,12 +215,49 @@ function chatApp() {
 
     formatText(text) {
       if (!text) return '';
-      return text
+
+      const escape = s => s
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
+        .replace(/>/g, '&gt;');
+
+      const inlineFormat = s => escape(s)
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-        .replace(/\n/g, '<br/>');
+        .replace(/\*(.+?)\*/g, '<em>$1</em>');
+
+      const lines = text.split('\n');
+      const out = [];
+      let i = 0;
+
+      while (i < lines.length) {
+        const line = lines[i];
+        // Detect markdown table: line starts and ends with |
+        if (/^\s*\|/.test(line)) {
+          // Collect all consecutive table lines
+          const tableLines = [];
+          while (i < lines.length && /^\s*\|/.test(lines[i])) {
+            tableLines.push(lines[i]);
+            i++;
+          }
+          // Separate header, separator, and body rows
+          const rows = tableLines.filter(l => !/^\s*\|[\s\-:|]+\|\s*$/.test(l));
+          const parseRow = l => l.replace(/^\s*\|/, '').replace(/\|\s*$/, '').split('|').map(c => c.trim());
+
+          let html = '<table class="msg-table">';
+          rows.forEach((row, idx) => {
+            const cells = parseRow(row);
+            const tag = idx === 0 ? 'th' : 'td';
+            html += '<tr>' + cells.map(c => `<${tag}>${inlineFormat(c)}</${tag}>`).join('') + '</tr>';
+          });
+          html += '</table>';
+          out.push(html);
+        } else {
+          out.push(inlineFormat(line));
+          i++;
+        }
+      }
+
+      return out.join('<br/>').replace(/(<br\/>)+(<table)/, '$2').replace(/(<\/table>)(<br\/>)+/, '$1');
     },
 
     getAccentClass(title) {
