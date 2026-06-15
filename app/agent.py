@@ -4,6 +4,7 @@ from pathlib import Path
 from openai import OpenAI
 from app.config import settings
 from app.booking import search_inventory, get_sku_detail, knowledge_base
+from app.airports import search_airports, resolve_iata
 
 _system_prompt = (Path(__file__).parent.parent / "SYSTEM_PROMPT.md").read_text(encoding="utf-8")
 
@@ -72,6 +73,23 @@ TOOLS = [
     {
         "type": "function",
         "function": {
+            "name": "airport_lookup",
+            "description": "Tra cứu mã IATA và thông tin sân bay từ tên thành phố, tên sân bay hoặc mã IATA. Dùng khi người dùng nhập tên thành phố hoặc địa danh không rõ mã sân bay.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "query": {
+                        "type": "string",
+                        "description": "Tên thành phố, tên sân bay, hoặc mã IATA cần tra cứu (ví dụ: 'Hà Nội', 'Phú Quốc', 'Singapore', 'HAN')",
+                    }
+                },
+                "required": ["query"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
             "name": "knowledge_base",
             "description": "Tra cứu chính sách, FAQ về hành lý, hoàn/đổi vé, check-in, quy định chung.",
             "parameters": {
@@ -88,10 +106,22 @@ TOOLS = [
     },
 ]
 
+def _airport_lookup_handler(args: dict):
+    query = args.get("query", "")
+    results = search_airports(query, limit=5)
+    if not results:
+        return {"found": False, "message": f"Không tìm thấy sân bay cho '{query}'"}
+    return {"found": True, "airports": [
+        {"iata": a["iata"], "name": a["name"], "city": a["city"], "country": a["country"]}
+        for a in results
+    ]}
+
+
 _TOOL_HANDLERS = {
     "search_inventory": lambda args: search_inventory(**args),
     "get_sku_detail": lambda args: get_sku_detail(**args),
     "knowledge_base": lambda args: knowledge_base(**args),
+    "airport_lookup": _airport_lookup_handler,
 }
 
 
@@ -106,6 +136,7 @@ def _execute_tool(name: str, args: dict):
 
 
 def parse_structured_response(text: str) -> tuple[str, dict | None]:
+    text = re.sub(r"<think>[\s\S]*?</think>", "", text).strip()
     pattern = r"```json\s*([\s\S]*?)```"
     matches = list(re.finditer(pattern, text))
     if not matches:
