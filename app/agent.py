@@ -209,14 +209,78 @@ def _execute_tool(name: str, args: dict):
         return {"error": str(e)}
 
 
+def _parse_minimax_xml(text: str) -> tuple[str, dict | None]:
+    """Parse MiniMax XML tool-call blocks that appear in message content.
+
+    Handles both:
+      <minimax:tool_call><invoke name="TYPE"><parameter name="K">V</parameter>...</invoke></minimax:tool_call>
+    and the plain variant without namespace:
+      <tool_call><invoke name="TYPE">...</invoke></tool_call>
+    """
+    xml_pattern = re.compile(
+        r"<(?:minimax:)?tool_call>\s*<invoke\s+name=[\"']([^\"']+)[\"']>([\s\S]*?)</invoke>\s*</(?:minimax:)?tool_call>",
+        re.IGNORECASE,
+    )
+    param_pattern = re.compile(r"<parameter\s+name=[\"']([^\"']+)[\"']>([\s\S]*?)</parameter>", re.IGNORECASE)
+
+    structured = None
+    actions_list = None
+
+    def _replace(m: re.Match) -> str:
+        nonlocal structured, actions_list
+        invoke_name = m.group(1).strip()
+        params_block = m.group(2)
+        params: dict = {}
+        for pm in param_pattern.finditer(params_block):
+            key, val = pm.group(1).strip(), pm.group(2).strip()
+            # Try to cast numeric values
+            try:
+                params[key] = int(val)
+            except ValueError:
+                try:
+                    params[key] = float(val)
+                except ValueError:
+                    params[key] = val
+
+        # Map invoke name to structured payload
+        if invoke_name == "handoff":
+            payload = {"type": "handoff", **params}
+            structured = payload
+        elif invoke_name in ("results", "suggestions", "inspiration", "price_calendar", "fallback", "experiences"):
+            structured = {"type": invoke_name, **params}
+        elif invoke_name == "actions":
+            actions_list = params.get("actions", [])
+        # Remove the raw XML block from the displayed text
+        return ""
+
+    clean_text = xml_pattern.sub(_replace, text).strip()
+
+    if structured is not None and actions_list is not None:
+        structured["actions"] = actions_list
+    if structured is None and actions_list is not None:
+        structured = {"type": "actions", "actions": actions_list}
+
+    return clean_text, structured
+
+
 def parse_structured_response(text: str) -> tuple[str, dict | None]:
     text = re.sub(r"<think>[\s\S]*?</think>", "", text).strip()
+
+    # Handle MiniMax XML tool-call format first
+    if re.search(r"<(?:minimax:)?tool_call>", text, re.IGNORECASE):
+        clean_text, structured = _parse_minimax_xml(text)
+        # If there are also JSON blocks in the same message, merge them below
+        text = clean_text
+        xml_structured = structured
+    else:
+        xml_structured = None
+
     pattern = r"```json\s*([\s\S]*?)```"
     matches = list(re.finditer(pattern, text))
     if not matches:
-        return text, None
+        return text, xml_structured
 
-    structured = None
+    structured = xml_structured
     actions_list = None
     for m in matches:
         try:

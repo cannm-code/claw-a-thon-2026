@@ -70,42 +70,66 @@ function chatApp() {
       this.messages.push({ role: 'user', text, structured: null });
     },
 
-    async _callChat(text) {
-      this.loading = true;
+    async _fetchChat(text) {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 60000);
       try {
         const res = await fetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: text }),
           credentials: 'include',
+          signal: controller.signal,
         });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
-
-        this.messages.push({
-          role: 'assistant',
-          text: data.text || '',
-          structured: data.structured || null,
-          actions: (data.structured && data.structured.actions) || [],
-        });
-
-        if (data.structured?.type === 'handoff') {
-          this.handoff = data.structured;
-          this.passenger = { name: '', email: '', phone: '' };
-          this.errors = {};
-          this.selectedPayment = 'zalopay';
-          await this.$nextTick();
-          setTimeout(() => { this.panel = 'checkout'; }, 600);
-        }
-      } catch (err) {
-        this.messages.push({
-          role: 'assistant',
-          text: 'Xin lỗi, có lỗi kết nối. Vui lòng thử lại sau.',
-          structured: null,
-        });
+        return { ok: res.ok, status: res.status, data };
       } finally {
-        this.loading = false;
+        clearTimeout(timeout);
       }
+    },
+
+    async _callChat(text) {
+      this.loading = true;
+      const MAX_RETRIES = 3;
+      let lastErr = null;
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        try {
+          const { ok, status, data } = await this._fetchChat(text);
+          if (!ok) {
+            const errText = data?.text || `Lỗi hệ thống (HTTP ${status}). Vui lòng thử lại.`;
+            this.messages.push({ role: 'assistant', text: errText, structured: null, actions: [] });
+            this.loading = false;
+            return;
+          }
+          this.messages.push({
+            role: 'assistant',
+            text: data.text || '',
+            structured: data.structured || null,
+            actions: (data.structured && data.structured.actions) || [],
+          });
+          if (data.structured?.type === 'handoff') {
+            this.handoff = data.structured;
+            this.passenger = { name: '', email: '', phone: '' };
+            this.errors = {};
+            this.selectedPayment = 'zalopay';
+            await this.$nextTick();
+            setTimeout(() => { this.panel = 'checkout'; }, 600);
+          }
+          this.loading = false;
+          return;
+        } catch (err) {
+          lastErr = err;
+          console.error(`[chat error] attempt ${attempt}/${MAX_RETRIES}`, err);
+          if (attempt < MAX_RETRIES) {
+            await new Promise(r => setTimeout(r, 1000 * attempt));
+          }
+        }
+      }
+      const msg = lastErr?.name === 'AbortError'
+        ? 'Yêu cầu mất quá lâu, vui lòng thử lại.'
+        : 'Xin lỗi, có lỗi kết nối. Vui lòng thử lại sau.';
+      this.messages.push({ role: 'assistant', text: msg, structured: null, actions: [] });
+      this.loading = false;
     },
 
     // ── Checkout ─────────────────────────────────────────────────────────────

@@ -4,3 +4,5 @@ openspec
 .agentbase/
 app/__pycache__
 data/sessions
+.DS_Store
+/app/__pycache__
