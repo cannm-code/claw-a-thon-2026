@@ -61,7 +61,7 @@ function chatApp() {
     pushWelcome() {
       this.messages.push({
         role: 'assistant',
-        text: 'Yo! Mình là Hannah — "em gái" du lịch của Claw-a-thon Travel ✈️🔥\n\nMình giúp bạn săn deal **vé máy bay**, **xe khách**, **tàu hỏa**, **khách sạn**, hoặc **vé tham quan** nhanh gọn lẹ!\n\nTrip tiếp theo của bạn là đâu vậy? 👀',
+        text: 'Yo! Mình là Vivi — "em gái" du lịch của Claw-a-thon Travel ✈️🔥\n\nMình giúp bạn săn deal **vé máy bay**, **xe khách**, **tàu hỏa**, **khách sạn**, hoặc **vé tham quan** nhanh gọn lẹ!\n\nTrip tiếp theo của bạn là đâu vậy? 👀',
         structured: null,
       });
     },
