@@ -173,7 +173,7 @@ async def chat(body: ChatRequest, request: Request, response: Response):
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"text": f"Lỗi hệ thống: {str(e)}", "structured": None},
+            content={"text": f"Ôi hệ thống bị lỗi rồi 😬 Bạn thử lại xem sao nha! (chi tiết: {str(e)})", "structured": None},
         )
 
     structured = _fix_image_keys(structured)

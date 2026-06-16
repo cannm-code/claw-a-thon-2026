@@ -159,7 +159,7 @@ TOOLS = [
         "type": "function",
         "function": {
             "name": "search_accommodation",
-            "description": "Tìm kiếm khách sạn, homestay, hostel theo khu vực, ngày nhận/trả phòng, số khách, ngân sách.",
+            "description": "Tìm kiếm khách sạn, homestay, hostel theo khu vực, ngày nhận/trả phòng, số khách, ngân sách. Trả về options[{sku_id, title, type, price, currency, area, note}] — dùng title và price trực tiếp vào results JSON.",
             "parameters": {
                 "type": "object",
                 "properties": {

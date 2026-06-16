@@ -28,8 +28,14 @@ function chatApp() {
 
     // ── Init ─────────────────────────────────────────────────────────────────
     init() {
-      this.pushWelcome();
+      const saved = this._loadMessages();
+      if (saved && saved.length > 0) {
+        this.messages = saved;
+      } else {
+        this.pushWelcome();
+      }
       this.$watch('messages', () => {
+        this._saveMessages();
         this.$nextTick(() => this.scrollBottom());
       });
       this.$watch('loading', () => {
@@ -37,10 +43,25 @@ function chatApp() {
       });
     },
 
+    _saveMessages() {
+      try {
+        localStorage.setItem('claw-chat-messages', JSON.stringify(this.messages));
+      } catch (_) {}
+    },
+
+    _loadMessages() {
+      try {
+        const raw = localStorage.getItem('claw-chat-messages');
+        return raw ? JSON.parse(raw) : null;
+      } catch (_) {
+        return null;
+      }
+    },
+
     pushWelcome() {
       this.messages.push({
         role: 'assistant',
-        text: 'Xin chào! Tôi là Hannah, trợ lý du lịch của Claw-a-thon Travel ✈️\n\nTôi có thể giúp bạn đặt **chuyến bay**, **xe khách**, **tàu hỏa**, **khách sạn**, hoặc **vé tham quan**.\n\nBạn muốn đi đâu hôm nay?',
+        text: 'Yo! Mình là Hannah — "em gái" du lịch của Claw-a-thon Travel ✈️🔥\n\nMình giúp bạn săn deal **vé máy bay**, **xe khách**, **tàu hỏa**, **khách sạn**, hoặc **vé tham quan** nhanh gọn lẹ!\n\nTrip tiếp theo của bạn là đâu vậy? 👀',
         structured: null,
       });
     },
@@ -96,8 +117,8 @@ function chatApp() {
         try {
           const { ok, status, data } = await this._fetchChat(text);
           if (!ok) {
-            const errText = data?.text || `Lỗi hệ thống (HTTP ${status}). Vui lòng thử lại.`;
-            this.messages.push({ role: 'assistant', text: errText, structured: null, actions: [] });
+            const errText = data?.text || `Ủa có lỗi xảy ra rồi bạn ơi (HTTP ${status}) 😅 Thử lại nha!`;
+            this.messages.push({ role: 'assistant', text: errText, structured: null, actions: [], isError: true, retryText: text });
             this.loading = false;
             return;
           }
@@ -126,22 +147,22 @@ function chatApp() {
         }
       }
       const msg = lastErr?.name === 'AbortError'
-        ? 'Yêu cầu mất quá lâu, vui lòng thử lại.'
-        : 'Xin lỗi, có lỗi kết nối. Vui lòng thử lại sau.';
-      this.messages.push({ role: 'assistant', text: msg, structured: null, actions: [] });
+        ? 'Ủa mạng hơi lờ đờ rồi bạn ơi 😅 Thử lại một lần nữa nha!'
+        : 'Ôi có gì đó sai sai rồi 😬 Bạn nhắn lại giúp mình với nha!';
+      this.messages.push({ role: 'assistant', text: msg, structured: null, actions: [], isError: true, retryText: text });
       this.loading = false;
     },
 
     // ── Checkout ─────────────────────────────────────────────────────────────
     validateForm() {
       const e = {};
-      if (!this.passenger.name.trim()) e.name = 'Vui lòng nhập họ tên';
+      if (!this.passenger.name.trim()) e.name = 'Bạn chưa nhập tên nè 👀';
       if (!this.passenger.email.trim()) {
-        e.email = 'Vui lòng nhập email';
+        e.email = 'Email bỏ trống rồi bạn ơi!';
       } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.passenger.email)) {
-        e.email = 'Email không hợp lệ';
+        e.email = 'Email trông hơi sai sai, kiểm tra lại nha 🙏';
       }
-      if (!this.passenger.phone.trim()) e.phone = 'Vui lòng nhập số điện thoại';
+      if (!this.passenger.phone.trim()) e.phone = 'Số điện thoại đâu rồi bạn ơi? 📱';
       this.errors = e;
       return Object.keys(e).length === 0;
     },
@@ -171,7 +192,7 @@ function chatApp() {
         this.confirmedPrice = this.formatPrice(data.total_price) + ' VND';
         this.panel = 'confirmed';
       } catch (err) {
-        this.showToast('Lỗi xác nhận đặt chỗ. Vui lòng thử lại.');
+        this.showToast('Ôi đặt chỗ bị lỗi rồi 😬 Thử lại xem sao bạn ơi!');
       } finally {
         this.bookingLoading = false;
       }
@@ -208,6 +229,7 @@ function chatApp() {
 
     // ── Helpers ──────────────────────────────────────────────────────────────
     resetChat() {
+      localStorage.removeItem('claw-chat-messages');
       this.messages = [];
       this.input = '';
       this.loading = false;

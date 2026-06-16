@@ -641,9 +641,9 @@ def search_accommodation(
             continue
         results.append({
             "sku_id": f"MOCK-ACC-{area.upper()}-{i+1:02d}",
-            "name": tpl["name"],
+            "title": tpl["name"],
             "type": tpl["type"],
-            "price_per_night": price,
+            "price": price,
             "currency": "VND",
             "area": area_name,
             "check_in": check_in,
@@ -658,16 +658,16 @@ def search_accommodation(
             s = _seed(area, check_in, "", i)
             results.append({
                 "sku_id": f"MOCK-ACC-{area.upper()}-{i+1:02d}",
-                "name": tpl["name"],
+                "title": tpl["name"],
                 "type": tpl["type"],
-                "price_per_night": tpl["base"] + (s % 6) * 50_000,
+                "price": tpl["base"] + (s % 6) * 50_000,
                 "currency": "VND",
                 "area": area_name,
                 "check_in": check_in,
                 "check_out": check_out,
                 "note": tpl["note"],
             })
-    return {"options": results[:5], "min_price": min(r["price_per_night"] for r in results) if results else 0}
+    return {"options": results[:5], "min_price": min(r["price"] for r in results) if results else 0}
 
 
 def get_suggestions(origin: str = "") -> list[dict]:
