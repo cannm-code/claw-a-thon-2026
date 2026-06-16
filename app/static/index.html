@@ -10,19 +10,19 @@
   <style>
     [x-cloak] { display: none !important; }
 
-    body { background: #FFF0F7; font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif; }
+    body { background: #EEF2FF; font-family: 'Plus Jakarta Sans', 'Segoe UI', system-ui, sans-serif; }
 
     .chat-bubble-ai {
       background: white;
       border-radius: 0 16px 16px 16px;
-      border-left: 3px solid #DB2777;
-      box-shadow: 0 1px 6px rgba(219,39,119,0.08);
+      border-left: 3px solid #6366F1;
+      box-shadow: 0 1px 6px rgba(99,102,241,0.08);
     }
     .chat-bubble-user {
-      background: linear-gradient(135deg, #9D174D, #BE185D);
+      background: linear-gradient(135deg, #4C1D95, #5B21B6);
       border-radius: 16px 0 16px 16px;
       color: white;
-      border-bottom: 2px solid #DB2777;
+      border-bottom: 2px solid #7C3AED;
     }
 
     .msg-table {
@@ -46,7 +46,7 @@
 
     .typing-dot {
       width: 8px; height: 8px;
-      background: #DB2777;
+      background: #6366F1;
       border-radius: 50%;
       animation: bounce 1.2s infinite;
     }
@@ -58,30 +58,30 @@
     }
 
     .result-card {
-      border: 0.5px solid #FCE7F3;
-      border-top: 3px solid #EC4899;
+      border: 0.5px solid #E0E7FF;
+      border-top: 3px solid #6366F1;
       border-radius: 12px;
       background: white;
       transition: box-shadow 0.2s, transform 0.2s;
     }
-    .result-card:hover { box-shadow: 0 6px 24px rgba(236,72,153,0.15); transform: translateY(-2px); }
+    .result-card:hover { box-shadow: 0 6px 24px rgba(99,102,241,0.15); transform: translateY(-2px); }
 
     .chip-card {
       border-radius: 12px;
       overflow: hidden;
       cursor: pointer;
       transition: transform 0.2s, box-shadow 0.2s;
-      background: #831843;
-      box-shadow: 0 2px 12px rgba(190,24,93,0.25);
+      background: #4C1D95;
+      box-shadow: 0 2px 12px rgba(91,33,182,0.25);
       position: relative;
     }
-    .chip-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(190,24,93,0.35); }
+    .chip-card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(91,33,182,0.35); }
     .chip-card-img-wrap { position: relative; }
     .chip-card-img-wrap::after {
       content: '';
       position: absolute;
       inset: 0;
-      background: linear-gradient(to top, rgba(131,24,67,0.88) 0%, rgba(131,24,67,0.2) 60%, transparent 100%);
+      background: linear-gradient(to top, rgba(76,29,149,0.88) 0%, rgba(76,29,149,0.2) 60%, transparent 100%);
     }
     .chip-card-label {
       position: absolute;
@@ -358,7 +358,7 @@
                              @click="sendChip(exp.title)"
                              style="cursor:pointer">
                           <div class="w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
-                               :class="exp.kind === 'staycation' ? 'bg-pink-50' : exp.kind === 'movie' ? 'bg-red-50' : 'bg-violet-50'">
+                               :class="exp.kind === 'staycation' ? 'bg-indigo-50' : exp.kind === 'movie' ? 'bg-red-50' : 'bg-violet-50'">
                             <span x-text="exp.kind === 'staycation' ? '🏨' : exp.kind === 'movie' ? '🎬' : '🎮'"></span>
                           </div>
                           <div class="flex-1 min-w-0">
