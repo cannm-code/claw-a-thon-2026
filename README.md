@@ -77,7 +77,7 @@ Hỗ trợ bất kỳ API tương thích OpenAI. Ví dụ:
 
 | Provider | MODEL_BASE_URL | MODEL_NAME |
 |---|---|---|
-| MiniMax | `https://api.minimax.chat/v1` | `MiniMax-M2.5` |
+| GreenNode | `https://maas-llm-aiplatform-hcm.api.vngcloud.vn/v1` | `minimax-m2.5` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o` |
 | Azure OpenAI | `https://<resource>.openai.azure.com/openai/deployments/<deploy>` | `gpt-4o` |
 | Local (LM Studio) | `http://localhost:1234/v1` | tên model local |
