@@ -6,7 +6,7 @@ Trợ lý đặt chỗ du lịch AI bằng tiếng Việt, hỗ trợ 5 loại s
 
 - Python 3.11+
 - Tài khoản GreenNode (hoặc bất kỳ API tương thích OpenAI)
-- Model: minimax/minimax-m2.5 (DEFAULT), ưu tiên sử dụng `Gemini 3.5 Flash` hoặc `Claude Sonet 4.6` nếu BTC có thể hỗ trợ
+- Model: `minimax/minimax-m2.5` (DEFAULT), ưu tiên sử dụng `Gemini 3.5 Flash` hoặc `Claude Sonet 4.6` nếu BTC có thể hỗ trợ
 
 ## Cài đặt
 
