@@ -1,6 +1,16 @@
 # Claw-a-thon 2026 — AI Travel Booking Agent
 
-Trợ lý đặt chỗ du lịch AI bằng tiếng Việt, hỗ trợ 5 loại sản phẩm: chuyến bay, xe khách, tàu hỏa, khách sạn, vé tham quan.
+1. Vấn đề đội giải quyết
+Hiện nay, việc lên kế hoạch cho một chuyến du lịch thường mất rất nhiều thời gian và công sức. Người dùng phải liên tục chuyển đổi qua lại giữa hàng chục ứng dụng và trang web khác nhau để tìm kiếm, so sánh giá cả và đặt các dịch vụ riêng lẻ. Sự phân mảnh này dẫn đến tình trạng quá tải thông tin, khiến việc "săn" được những mức giá tốt nhất trở nên khó khăn, phức tạp và dễ gây nản lòng trước khi chuyến đi thực sự bắt đầu.
+
+2. Người dùng mục tiêu
+Khách hàng mục tiêu bao gồm giới trẻ bận rộn, dân văn phòng, hoặc các gia đình muốn tổ chức những chuyến đi tự túc. Đây là những người cần một giải pháp đặt chỗ tiện lợi, chính xác, không muốn tốn hàng giờ đồng hồ để tự mình nghiên cứu lịch trình hay đối chiếu giá cả.
+
+3. Cách AI Agent giải quyết vấn đề
+Chúng tôi phát triển một Trợ lý đặt chỗ du lịch AI bằng tiếng Việt, đóng vai trò như một "em gái du lịch" tận tâm và thông minh. Thay vì phải tự tìm kiếm trên nhiều nền tảng, người dùng chỉ cần tương tác bằng ngôn ngữ tự nhiên qua giao diện chat. Ngay lập tức, AI Agent sẽ hiểu ngữ cảnh, tự động quét và tổng hợp dữ liệu từ 5 loại hình dịch vụ cốt lõi: chuyến bay, xe khách, tàu hỏa, khách sạn và vé tham quan. Trợ lý sẽ phân tích chéo các nguồn, đề xuất những lựa chọn phù hợp nhất với nhu cầu và hỗ trợ hoàn tất đặt chỗ ngay tại một nơi duy nhất.
+
+4. Giá trị mang lại
+Giải pháp này mang đến một trải nghiệm du lịch "nhanh - gọn - lẹ" và hoàn toàn liền mạch. Người dùng tiết kiệm được hàng giờ đồng hồ tìm kiếm và giảm bớt căng thẳng khi lên kế hoạch. Đồng thời, nhờ khả năng tối ưu hóa của AI, khách hàng có thể dễ dàng chốt được các "deal" tiết kiệm chi phí nhất. Sản phẩm biến một quy trình đặt vé khô khan, phức tạp trở nên nhẹ nhàng, cá nhân hóa và thân thiện như đang trò chuyện với một người bạn thực sự thấu hiểu sở thích xê dịch của mình.
 
 ## Yêu cầu
 
