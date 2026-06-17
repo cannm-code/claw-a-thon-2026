@@ -8,7 +8,7 @@ from app.airports import search_airports, resolve_iata
 
 _system_prompt = (Path(__file__).parent.parent / "SYSTEM_PROMPT.md").read_text(encoding="utf-8")
 
-_client = OpenAI(base_url=settings.minimax_base_url, api_key=settings.minimax_api_key)
+_client = OpenAI(base_url=settings.model_base_url, api_key=settings.model_api_key)
 
 TOOLS = [
     {

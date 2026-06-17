@@ -24,8 +24,8 @@ pip install -r requirements.txt
 # 4. Cấu hình API
 cp .env.example .env
 # Mở .env và điền thông tin:
-#   MINIMAX_BASE_URL=https://api.minimax.chat/v1
-#   MINIMAX_API_KEY=your_api_key_here
+#   MODEL_BASE_URL=https://api.minimax.chat/v1
+#   MODEL_API_KEY=your_api_key_here
 #   MODEL_NAME=MiniMax-M2.5
 
 # 5. Chạy server
@@ -74,7 +74,7 @@ claw-a-thon-2026/
 
 Hỗ trợ bất kỳ API tương thích OpenAI. Ví dụ:
 
-| Provider | BASE_URL | MODEL_NAME |
+| Provider | MODEL_BASE_URL | MODEL_NAME |
 |---|---|---|
 | MiniMax | `https://api.minimax.chat/v1` | `MiniMax-M2.5` |
 | OpenAI | `https://api.openai.com/v1` | `gpt-4o` |
